@@ -45,4 +45,8 @@ class MPTTModelMultipleChoiceField(forms.ModelMultipleChoiceField):
         """
         return MPTTModelChoiceIterator(self)
 
-    choices = property(_get_choices, forms.ChoiceField._set_choices)
+    def _set_choices(self, value):
+        self._choices = value
+        self.widget.choices = value
+
+    choices = property(_get_choices, _set_choices)
