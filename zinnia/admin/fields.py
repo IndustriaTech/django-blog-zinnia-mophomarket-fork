@@ -45,8 +45,9 @@ class MPTTModelMultipleChoiceField(forms.ModelMultipleChoiceField):
         """
         return MPTTModelChoiceIterator(self)
 
-    def _set_choices(self, value):
-        self._choices = value
-        self.widget.choices = value
-
-    choices = property(_get_choices, _set_choices)
+    try:
+        # Django <= 4.2.x
+        choices = property(_get_choices, forms.ChoiceField._set_choices)
+    except AttributeError:
+        # Django >= 5.0.x
+        choices = property(_get_choices, forms.ChoiceField.choices.fset)

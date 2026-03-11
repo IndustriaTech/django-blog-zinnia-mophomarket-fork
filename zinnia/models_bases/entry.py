@@ -191,6 +191,10 @@ class CoreEntry(models.Model):
         get_latest_by = 'publication_date'
         verbose_name = _('entry')
         verbose_name_plural = _('entries')
+        indexes = [
+            models.Index(fields=["slug", "publication_date"]),
+            models.Index(fields=["status", "publication_date", "start_publication", "end_publication" ]),
+        ]
         permissions = (('can_view_all', 'Can view all entries'),
                        ('can_change_status', 'Can change status'),
                        ('can_change_author', 'Can change author(s)'), )
