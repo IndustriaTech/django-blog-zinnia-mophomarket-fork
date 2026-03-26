@@ -1,7 +1,9 @@
 """Views for Zinnia archives"""
 import datetime
 
+from django.urls import resolve
 from django.utils import timezone
+from django.utils.translation import get_language_from_request
 from django.views.generic.dates import BaseArchiveIndexView
 from django.views.generic.dates import BaseDayArchiveView
 from django.views.generic.dates import BaseMonthArchiveView
@@ -18,6 +20,24 @@ from zinnia.views.mixins.templates import \
     EntryQuerysetArchiveTemplateResponseMixin
 from zinnia.views.mixins.templates import \
     EntryQuerysetArchiveTodayTemplateResponseMixin
+
+def apply_pagecontent_to_view(request):
+    """
+    Fix the missing Draft / Publish button for AppHooks
+    See  https://github.com/django-cms/django-cms/issues/7909
+    Fix is inspired by this comment here https://github.com/django-cms/django-cms/issues/7712#issuecomment-1844845602
+    You can remove this function after you upgrade to Django CMS 5.1
+    """
+    if not hasattr(request, 'toolbar'):
+        return
+    match = resolve(request.path)
+    page_content = None
+    language = get_language_from_request(request, check_path=True)
+    if request.current_page:
+        page_content = request.current_page.pagecontent_set.get(language=language)
+    if page_content:
+        request.toolbar.set_object(page_content)
+
 
 
 class EntryArchiveMixin(ArchiveMixin,
@@ -45,6 +65,9 @@ class EntryIndex(EntryArchiveMixin,
     View returning the archive index.
     """
     context_object_name = 'entry_list'
+    def dispatch(self, request, *args, **kwargs):
+        apply_pagecontent_to_view(request)
+        return super().dispatch(request, *args, **kwargs)
 
 
 class EntryYear(EntryArchiveMixin, BaseYearArchiveView):
